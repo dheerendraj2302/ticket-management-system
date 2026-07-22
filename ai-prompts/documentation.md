@@ -33,10 +33,4 @@
 - "Running tests" section with `--runInBand` note
 - "Uncertainties / things to adjust locally" caveats
 
-**Changed:**
-
-**Rejected:**
-
-**Why:**
-
 
