@@ -1,0 +1,50 @@
+---
+description: Backend API conventions for Express routes, controllers, validators, and repositories
+globs: ["src/backend/**/*.js"]
+alwaysApply: false
+---
+
+# Backend API Conventions
+
+Keep endpoints small and layered. Each layer has one job:
+
+- **routes/** — wire paths to controller handlers. No logic, no DB.
+- **controllers/** — orchestrate a request: call the validator, call
+  repositories, map results to a status + JSON. No SQL, no inline validation.
+- **validators/** — pure field validation (presence, type, allowed values).
+  Return `{ value }` on success or `{ error, status }` on failure. No DB access.
+- **repositories/** — all DB access. Own the SQL; expose intent-revealing
+  functions (`insertTicket`, `findExistingUserIds`). No `req`/`res`.
+- **utils/** — shared pure helpers, row mappers, and enum constants.
+
+```js
+// controller orchestrates, does not validate or query inline
+const validation = validateCreateTicket(req.body);
+if (validation.error) return res.status(validation.status).json({ error: validation.error });
+const ticket = await ticketsRepository.insertTicket({ ...validation.value, status: DEFAULT_STATUS });
+res.status(201).json(ticket);
+```
+
+## SQL
+- Keep SQL in the repository as named `const` strings (`const INSERT_TICKET = ...`),
+  not inline in the call. Template literals are fine for multi-line readability.
+- NEVER interpolate user input into SQL — always pass values as `$1, $2` params.
+  Only positional placeholders (built from array index) may be composed into text.
+- Minimize round-trips: batch lookups into one query (e.g. validate multiple user
+  ids with `SELECT id FROM users WHERE id IN ($1, $2)`) instead of a query per id.
+
+## Enum / status values
+- Never hardcode enum literals (`'Open'`, `'Medium'`) in queries or logic. Use the
+  shared constants in `utils/tickets.js` (`DEFAULT_STATUS`, `VALID_STATUSES`,
+  `DEFAULT_PRIORITY`, `VALID_PRIORITIES`). Pass status as a query parameter.
+
+## Status codes
+- Set status explicitly for readability: `res.status(200).json(...)`, `201` on
+  create, `204` for empty success.
+- Errors: `400` invalid input, `403` forbidden, `404` not found, `409` invalid
+  state transition. Forward unexpected errors via `next(error)`.
+
+## Validation
+- Validate on the backend; never trust the frontend. Validate every param the
+  endpoint reads (presence, type, allowed enum values) and reject with `400`
+  before touching the DB. Endpoints that read no params need no validation.

@@ -1,0 +1,30 @@
+---
+description: Ticket status state machine — the enforced valid transitions for this project
+globs: ["**/ticket*", "**/status*"]
+alwaysApply: false
+---
+
+# Ticket Status State Machine
+
+This is the one business rule in the whole project that must be enforced exactly. Do not simplify it, do not allow other transitions, and never infer a transition from convenience.
+
+**Valid transitions (allow):**
+- Open → In Progress
+- In Progress → Resolved
+- Resolved → Closed
+- Open → Cancelled
+- In Progress → Cancelled
+
+**Everything else is invalid and must be rejected**, including but not limited to:
+- Open → Resolved
+- Open → Closed
+- Resolved → Open
+- Any transition out of Closed (terminal state)
+- Any transition out of Cancelled (terminal state)
+
+**Implementation requirements:**
+- Enforce this on the backend — that is the source of truth. The frontend may also restrict the UI to valid next-states for UX, but must not be relied on for correctness.
+- An invalid transition attempt must return a 4xx response with a clear error message naming the current status and the attempted status — never a silent no-op.
+- Encode the valid-transition table as a single lookup structure (e.g. a map of current → allowed[]) rather than scattered if/else branches — it should be trivial to unit test in isolation.
+
+**Role and remarks (second layer):** After a base transition is valid, actor rules (assignee vs creator vs admin) and mandatory remarks for `Resolved` / `Cancelled` apply. See `role-transitions.mdc` and `src/shared/stateMachine.js`.

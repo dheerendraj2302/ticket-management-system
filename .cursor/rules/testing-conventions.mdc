@@ -1,0 +1,15 @@
+---
+description: Testing conventions for backend tests
+globs: ["**/tests/**", "**/*.test.*", "**/*.spec.*"]
+alwaysApply: false
+---
+
+# Testing Conventions
+
+- Framework: Jest + Supertest for API/integration tests.
+- One test file per resource (e.g. `ticket.test.js`, `comment.test.js`).
+- Every state-machine transition in `state-machine.mdc` gets its own test case — valid transitions assert success, invalid ones assert rejection with the right status code.
+- Test names describe behavior, not implementation, e.g. "rejects transition from Closed to any status", not "test3".
+- Reset/seed the database between test runs so tests are order-independent.
+- Don't mock the database for integration tests — use a real (test) Postgres file so persistence is actually exercised.
+- A test that always passes regardless of the code is worse than no test — assert on actual response bodies and status codes.

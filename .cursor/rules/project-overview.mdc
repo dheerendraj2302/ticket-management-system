@@ -1,0 +1,26 @@
+---
+description: Project overview and stack conventions for the Support Ticket Management System
+alwaysApply: true
+---
+
+# Support Ticket Management System — Project Overview
+
+Full-stack app for an AI capability exercise. Keep it small and clean — this is a Core-scoped project, not a production system. Do not add features beyond what's asked.
+
+**Stack:** React (Vite) frontend · Node.js/Express backend · Postgres as a RDBMS · Jest + Supertest for backend tests.
+
+**Structure:**
+- `src/frontend/` — React app
+- `src/backend/` — Express API
+- `database/` — schema, seed data, setup notes
+
+**Entities:** User (seed-only, no CRUD UI), Ticket, Comment. See `data-model.md` for exact fields.
+
+**Conventions:**
+- Validate all input on the backend; never trust the frontend alone.
+- Every error returns a clear message and the correct HTTP status.
+- No secrets in code — use `.env`, keep `.env.example` in sync.
+- Prefer small, single-purpose functions over clever abstractions.
+- Every new backend feature needs at least one test before it's considered done.
+
+When unsure, ask before generating — don't guess silently on business rules, especially ticket status transitions (see `state-machine.mdc`).
